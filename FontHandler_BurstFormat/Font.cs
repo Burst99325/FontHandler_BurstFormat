@@ -9,37 +9,44 @@ namespace FontHandlerFormat
     {
         public Font Load(string filePath)
         {
-            StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
-            if (stream.CurrentEncoding != Encoding.UTF8) return null;
-            string[] fontHeader = stream.ReadLine().Split(',');
-            if (fontHeader[0] != "FONT") return null;
-            Font font = new Font 
-            { 
-                Name = Path.GetFileNameWithoutExtension(filePath),
-                FilePath = filePath,
-                Height = Convert.ToInt32(fontHeader[1]),
-                Spacing = Convert.ToInt32(fontHeader[2])
-            };
-            while (true)
+            try
             {
-                if (stream.EndOfStream) break;
-                string[] charHeader = stream.ReadLine().Split(',');
-                FontChar fontChar = new FontChar
+                StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
+                if (stream.CurrentEncoding != Encoding.UTF8) return null;
+                string[] fontHeader = stream.ReadLine().Split(',');
+                if (fontHeader[0] != "FONT") return null;
+                Font font = new Font
                 {
-                    Char = charHeader[0][0],
-                    Width = Convert.ToInt32(charHeader[1])
+                    Name = Path.GetFileNameWithoutExtension(filePath),
+                    FilePath = filePath,
+                    Height = Convert.ToInt32(fontHeader[1]),
+                    Spacing = Convert.ToInt32(fontHeader[2])
                 };
-                bool[,] pixels = new bool[fontChar.Width, font.Height];
-                for (int y = 0; y < font.Height; y++)
+                while (true)
                 {
-                    string binaryLine = stream.ReadLine();
-                    for (int x = 0; x < fontChar.Width; x++)
-                        pixels[x, y] = binaryLine[x] == '1';
+                    if (stream.EndOfStream) break;
+                    string[] charHeader = stream.ReadLine().Split(',');
+                    FontChar fontChar = new FontChar
+                    {
+                        Char = charHeader[0][0],
+                        Width = Convert.ToInt32(charHeader[1])
+                    };
+                    bool[,] pixels = new bool[fontChar.Width, font.Height];
+                    for (int y = 0; y < font.Height; y++)
+                    {
+                        string binaryLine = stream.ReadLine();
+                        for (int x = 0; x < fontChar.Width; x++)
+                            pixels[x, y] = binaryLine[x] == '1';
+                    }
+                    fontChar.Pixels = pixels;
                 }
-                fontChar.Pixels = pixels;
+                stream.Close();
+                return font;
             }
-            stream.Close();
-            return font;
+            catch 
+            {
+                return null;
+            }
         }
 
         public void Save(Font font, string filePath)

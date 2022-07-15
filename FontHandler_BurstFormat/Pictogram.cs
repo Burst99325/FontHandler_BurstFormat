@@ -9,27 +9,34 @@ namespace FontHandlerFormat
     {
         public Pictogram Load(string filePath)
         {
-            StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
-            if (stream.CurrentEncoding != Encoding.UTF8) return null;
-            string[] picHeader = stream.ReadLine().Split(',');
-            if (picHeader[0] != "PICTOGRAM") return null;
-            Pictogram pic = new Pictogram 
+            try
             {
-                Name = Path.GetFileNameWithoutExtension(filePath),
-                FilePath = filePath,
-                Width = Convert.ToInt32(picHeader[1]),
-                Height = Convert.ToInt32(picHeader[2]),
-            };
-            bool[,] pixels = new bool[pic.Width, pic.Height];
-            for (int y = 0; y < pic.Height; y++)
-            {
-                string binaryLine = stream.ReadLine();
-                for (int x = 0; x < pic.Width; x++)
-                    pixels[x, y] = binaryLine[x] == '1';
+                StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
+                if (stream.CurrentEncoding != Encoding.UTF8) return null;
+                string[] picHeader = stream.ReadLine().Split(',');
+                if (picHeader[0] != "PICTOGRAM") return null;
+                Pictogram pic = new Pictogram
+                {
+                    Name = Path.GetFileNameWithoutExtension(filePath),
+                    FilePath = filePath,
+                    Width = Convert.ToInt32(picHeader[1]),
+                    Height = Convert.ToInt32(picHeader[2]),
+                };
+                bool[,] pixels = new bool[pic.Width, pic.Height];
+                for (int y = 0; y < pic.Height; y++)
+                {
+                    string binaryLine = stream.ReadLine();
+                    for (int x = 0; x < pic.Width; x++)
+                        pixels[x, y] = binaryLine[x] == '1';
+                }
+                pic.Pixels = pixels;
+                stream.Close();
+                return pic;
             }
-            pic.Pixels = pixels;
-            stream.Close();
-            return pic;
+            catch 
+            {
+                return null;
+            }
         }
 
         public void Save(Pictogram pic, string filePath)
