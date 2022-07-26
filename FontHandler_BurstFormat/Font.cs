@@ -12,9 +12,9 @@ namespace FontHandlerFormat
             try
             {
                 StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
-                if (stream.CurrentEncoding != Encoding.UTF8) return null;
+                if (stream.CurrentEncoding != Encoding.UTF8) throw new Exception("File encoding is not UTF-8!");
                 string[] fontHeader = stream.ReadLine().Split(',');
-                if (fontHeader[0] != "FONT") return null;
+                if (fontHeader[0] != "FONT") throw new Exception("File is not Burstypo font file!");
                 Font font = new Font
                 {
                     Name = Path.GetFileNameWithoutExtension(filePath),
@@ -39,13 +39,14 @@ namespace FontHandlerFormat
                             pixels[x, y] = binaryLine[x] == '1';
                     }
                     fontChar.Pixels = pixels;
+                    font.Chars.Add(fontChar);
                 }
                 stream.Close();
                 return font;
             }
             catch 
             {
-                return null;
+                throw new Exception("File is corrupt!");
             }
         }
 

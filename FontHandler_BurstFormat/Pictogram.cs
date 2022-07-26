@@ -12,9 +12,9 @@ namespace FontHandlerFormat
             try
             {
                 StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
-                if (stream.CurrentEncoding != Encoding.UTF8) return null;
+                if (stream.CurrentEncoding != Encoding.UTF8) throw new Exception("File encoding is not UTF-8!");
                 string[] picHeader = stream.ReadLine().Split(',');
-                if (picHeader[0] != "PICTOGRAM") return null;
+                if (picHeader[0] != "PICTOGRAM") throw new Exception("File is not Burstypo pictogram file!");
                 Pictogram pic = new Pictogram
                 {
                     Name = Path.GetFileNameWithoutExtension(filePath),
@@ -35,7 +35,7 @@ namespace FontHandlerFormat
             }
             catch 
             {
-                return null;
+                throw new Exception("File is corrupt!");
             }
         }
 
