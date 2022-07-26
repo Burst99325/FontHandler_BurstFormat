@@ -9,45 +9,44 @@ namespace FontHandlerFormat
     {
         public Font Load(string filePath)
         {
-            try
+            StreamReader stream = new StreamReader(filePath);
+            if (stream.CurrentEncoding != Encoding.UTF8) throw new Exception("File encoding is not UTF-8!");
+            string[] fontHeader = stream.ReadLine().Split(',');
+            if (fontHeader[0] != "FONT") throw new Exception("File is not Burstypo font file!");
+            Font font = new Font
             {
-                StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
-                if (stream.CurrentEncoding != Encoding.UTF8) throw new Exception("File encoding is not UTF-8!");
-                string[] fontHeader = stream.ReadLine().Split(',');
-                if (fontHeader[0] != "FONT") throw new Exception("File is not Burstypo font file!");
-                Font font = new Font
+                Name = Path.GetFileNameWithoutExtension(filePath),
+                FilePath = filePath,
+                Height = Convert.ToInt32(fontHeader[1]),
+                Spacing = Convert.ToInt32(fontHeader[2])
+            };
+            while (true)
+            {
+                if (stream.EndOfStream) break;
+                string[] charHeader = stream.ReadLine().Split(',');
+                FontChar fontChar = new FontChar();
+                if (charHeader.Length == 3)
                 {
-                    Name = Path.GetFileNameWithoutExtension(filePath),
-                    FilePath = filePath,
-                    Height = Convert.ToInt32(fontHeader[1]),
-                    Spacing = Convert.ToInt32(fontHeader[2])
-                };
-                while (true)
-                {
-                    if (stream.EndOfStream) break;
-                    string[] charHeader = stream.ReadLine().Split(',');
-                    FontChar fontChar = new FontChar
-                    {
-                        Char = charHeader[0][0],
-                        Width = Convert.ToInt32(charHeader[1])
-                    };
-                    bool[,] pixels = new bool[fontChar.Width, font.Height];
-                    for (int y = 0; y < font.Height; y++)
-                    {
-                        string binaryLine = stream.ReadLine();
-                        for (int x = 0; x < fontChar.Width; x++)
-                            pixels[x, y] = binaryLine[x] == '1';
-                    }
-                    fontChar.Pixels = pixels;
-                    font.Chars.Add(fontChar);
+                    fontChar.Char = ',';
+                    fontChar.Width = Convert.ToInt32(charHeader[2]);
                 }
-                stream.Close();
-                return font;
+                else
+                {
+                    fontChar.Char = charHeader[0][0];
+                    fontChar.Width = Convert.ToInt32(charHeader[1]);
+                }
+                bool[,] pixels = new bool[fontChar.Width, font.Height];
+                for (int y = 0; y < font.Height; y++)
+                {
+                    string binaryLine = stream.ReadLine();
+                    for (int x = 0; x < fontChar.Width; x++)
+                        pixels[x, y] = binaryLine[x] == '1';
+                }
+                fontChar.Pixels = pixels;
+                font.Chars.Add(fontChar);
             }
-            catch 
-            {
-                throw new Exception("File is corrupt!");
-            }
+            stream.Close();
+            return font;
         }
 
         public void Save(Font font, string filePath)

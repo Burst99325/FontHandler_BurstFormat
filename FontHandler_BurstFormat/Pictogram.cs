@@ -9,34 +9,27 @@ namespace FontHandlerFormat
     {
         public Pictogram Load(string filePath)
         {
-            try
+            StreamReader stream = new StreamReader(filePath);
+            if (stream.CurrentEncoding != Encoding.UTF8) throw new Exception("File encoding is not UTF-8!");
+            string[] picHeader = stream.ReadLine().Split(',');
+            if (picHeader[0] != "PICTOGRAM") throw new Exception("File is not Burstypo pictogram file!");
+            Pictogram pic = new Pictogram
             {
-                StreamReader stream = new StreamReader(filePath, Encoding.Default, true);
-                if (stream.CurrentEncoding != Encoding.UTF8) throw new Exception("File encoding is not UTF-8!");
-                string[] picHeader = stream.ReadLine().Split(',');
-                if (picHeader[0] != "PICTOGRAM") throw new Exception("File is not Burstypo pictogram file!");
-                Pictogram pic = new Pictogram
-                {
-                    Name = Path.GetFileNameWithoutExtension(filePath),
-                    FilePath = filePath,
-                    Width = Convert.ToInt32(picHeader[1]),
-                    Height = Convert.ToInt32(picHeader[2]),
-                };
-                bool[,] pixels = new bool[pic.Width, pic.Height];
-                for (int y = 0; y < pic.Height; y++)
-                {
-                    string binaryLine = stream.ReadLine();
-                    for (int x = 0; x < pic.Width; x++)
-                        pixels[x, y] = binaryLine[x] == '1';
-                }
-                pic.Pixels = pixels;
-                stream.Close();
-                return pic;
-            }
-            catch 
+                Name = Path.GetFileNameWithoutExtension(filePath),
+                FilePath = filePath,
+                Width = Convert.ToInt32(picHeader[1]),
+                Height = Convert.ToInt32(picHeader[2]),
+            };
+            bool[,] pixels = new bool[pic.Width, pic.Height];
+            for (int y = 0; y < pic.Height; y++)
             {
-                throw new Exception("File is corrupt!");
+                string binaryLine = stream.ReadLine();
+                for (int x = 0; x < pic.Width; x++)
+                    pixels[x, y] = binaryLine[x] == '1';
             }
+            pic.Pixels = pixels;
+            stream.Close();
+            return pic;
         }
 
         public void Save(Pictogram pic, string filePath)
